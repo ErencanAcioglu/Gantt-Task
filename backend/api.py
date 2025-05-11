@@ -3,7 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 import httpx
 import os
 from dotenv import load_dotenv
-from mangum import Mangum
 
 # Load environment variables
 load_dotenv()
@@ -144,7 +143,4 @@ async def highlight(order_code: str):
                     detail=f"Work order '{order_code}' not found."
                 )
             
-            return tasks
-
-# Vercel serverless handler
-handler = Mangum(app) 
+            return tasks 

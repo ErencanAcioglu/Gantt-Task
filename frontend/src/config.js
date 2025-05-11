@@ -7,7 +7,7 @@ export const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // Backend API URL - Ortama göre değişir
 const isProduction = import.meta.env.PROD; // Vite production modunu kontrol eder
 export const BACKEND_API_URL = isProduction 
-  ? 'https://gantt-task-backend.vercel.app' // Production backend URL (henüz mevcut değil)
+  ? 'https://gantt-task-back.vercel.app' // Production backend URL
   : 'http://localhost:8000'; // Development backend URL
 
 // Uygulama ayarları

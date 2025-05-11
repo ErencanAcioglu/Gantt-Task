@@ -42,7 +42,7 @@ const formatShortDate = (date) => {
 };
 
 // Gantt Chart için veri formatı oluşturma
-const formatDataForGantt = (machineTasks, highlightedOrderCode = null) => {    
+const formatDataForGantt = (machineTasks, highlightedOrderCode = null) => {
   // Header satırı
   const data = [
     [
@@ -64,7 +64,7 @@ const formatDataForGantt = (machineTasks, highlightedOrderCode = null) => {
 
   // Renk ayarları
   const colors = {
-    highlighted: '#FFD700', // Vurgulanan (koyu sarı - altın sarısı)
+    highlighted: '#FFFF00', // Daha parlak sarı renk
     normal: '#4285F4',      // Normal (mavi)
     inProgress: '#FF9900',  // İşlem devam ediyor (turuncu)
   };
@@ -138,7 +138,7 @@ const formatDataForGantt = (machineTasks, highlightedOrderCode = null) => {
         </div>
         <div style="margin: 4px 0"><strong>Start:</strong> ${formatDate(startTime)}</div>
         <div style="margin: 4px 0"><strong>End:</strong> ${formatDate(endTime)}</div>
-        <div style="margin: 4px 0"><strong>Work Order:</strong> ${task.work_order_id || 'MFG-5'}</div>
+        <div style="margin: 4px 0"><strong>Work Order:</strong> ${task.work_order_id || ''}</div>
         <div style="margin: 4px 0"><strong>Customer:</strong> ${task.customer || 'ATLAS'}</div>
       </div>
     `;
@@ -176,20 +176,20 @@ const GanttChart = ({ highlightedOrderCode }) => {
         setError(null);
         
         const tasks = await getMachineTasks();
-        
-        if (!tasks || tasks.length === 0) {
+          
+          if (!tasks || tasks.length === 0) {
           throw new Error('Görev verisi bulunamadı');
         }
         
         // Veriyi Gantt Chart formatına dönüştür
         const formattedData = formatDataForGantt(tasks, highlightedOrderCode);
         setChartData(formattedData);
-        
+
         // Tarih aralığını ayarla
         if (tasks.length > 1) {
           let minDate = moment(tasks[0].start_time).subtract(4, 'hours');
           let maxDate = moment(tasks[0].end_time).add(4, 'hours');
-          
+
           tasks.forEach(task => {
             const startMoment = moment(task.start_time);
             const endMoment = moment(task.end_time);
@@ -202,7 +202,7 @@ const GanttChart = ({ highlightedOrderCode }) => {
               maxDate = endMoment;
             }
           });
-          
+
           setDateRange({
             start: minDate.subtract(4, 'hours').toDate(),
             end: maxDate.add(4, 'hours').toDate()
@@ -215,7 +215,7 @@ const GanttChart = ({ highlightedOrderCode }) => {
         setLoading(false);
       }
     };
-    
+
     fetchData();
   }, [highlightedOrderCode]);
 
@@ -224,7 +224,7 @@ const GanttChart = ({ highlightedOrderCode }) => {
     return (
       <div className="gantt-container">
         <h2 className="gantt-title">
-          Production Gantt Chart {highlightedOrderCode ? `(Highlighted Work Orders: ${highlightedOrderCode})` : '(Highlighted Work Orders: MFG-5)'}
+          Production Gantt Chart {highlightedOrderCode ? `(Highlighted Work Orders: ${highlightedOrderCode})` : ''}
         </h2>
         <div className="loading-spinner">
           <div className="spinner-content">
@@ -249,35 +249,35 @@ const GanttChart = ({ highlightedOrderCode }) => {
 
   // Alternatif liste görünümü
   const renderAlternativeView = () => {
-    if (!chartData || chartData.length <= 1) {
-      return <div className="no-data-message">Görüntülenecek veri yok.</div>;
-    }
+  if (!chartData || chartData.length <= 1) {
+    return <div className="no-data-message">Görüntülenecek veri yok.</div>;
+  }
 
     return (
-      <div className="machine-list">
-        {chartData.slice(1).map((row, index) => {
-          const isHighlighted = row[7] === '#FFD700';
-          const inProgress = new Date() >= row[2] && new Date() <= row[3];
-          
-          return (
-            <div 
-              key={index} 
-              className={`machine-item ${isHighlighted ? 'highlighted' : ''} ${inProgress ? 'in-progress' : ''}`}
-              style={{
-                backgroundColor: row[7] || '#4285F4',
+        <div className="machine-list">
+          {chartData.slice(1).map((row, index) => {
+          const isHighlighted = row[7] === '#FFFF00';
+            const inProgress = new Date() >= row[2] && new Date() <= row[3];
+            
+            return (
+              <div 
+                key={index} 
+                className={`machine-item ${isHighlighted ? 'highlighted' : ''} ${inProgress ? 'in-progress' : ''}`}
+                style={{
+                  backgroundColor: row[7] || '#4285F4',
                 borderLeft: isHighlighted ? '4px solid #FF9900' : 'none'
-              }}
-            >
+                }}
+              >
               <div className="machine-name">{row[0]}</div>
               <div className="time-range">
                 <strong>Zaman:</strong> {formatShortDate(row[2])} - {formatShortDate(row[3])}
-              </div>
+                </div>
               <div className="order-info">
-                <strong>İş Emri:</strong> {highlightedOrderCode || 'MFG-5'}
+                <strong>İş Emri:</strong> {highlightedOrderCode || ''}
               </div>
-            </div>
-          );
-        })}
+              </div>
+            );
+          })}
       </div>
     );
   };
@@ -285,7 +285,7 @@ const GanttChart = ({ highlightedOrderCode }) => {
   return (
     <div className="gantt-container">
       <h2 className="gantt-title">
-        Production Gantt Chart {highlightedOrderCode ? `(Highlighted Work Orders: ${highlightedOrderCode})` : '(Highlighted Work Orders: MFG-5)'}
+        Production Gantt Chart {highlightedOrderCode ? `(Highlighted Work Orders: ${highlightedOrderCode})` : ''}
       </h2>
       
       <div className="chart-wrapper">

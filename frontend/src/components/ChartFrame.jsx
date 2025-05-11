@@ -70,12 +70,12 @@ const ChartFrame = ({ chartData, highlightedOrderCode }) => {
               var data = new google.visualization.DataTable();
               data.addColumn('string', 'Task ID');
               data.addColumn('string', 'Task Name');
-              data.addColumn('string', 'Resource');
               data.addColumn('date', 'Start Date');
               data.addColumn('date', 'End Date');
               data.addColumn('number', 'Duration');
               data.addColumn('number', 'Percent Complete');
               data.addColumn('string', 'Dependencies');
+              data.addColumn({type: 'string', role: 'style'});
               data.addColumn({type: 'string', role: 'tooltip', p: {html: true}});
 
               var rawData = ${JSON.stringify(chartData.slice(1))};
@@ -88,9 +88,27 @@ const ChartFrame = ({ chartData, highlightedOrderCode }) => {
                 var startTime = new Date(row[2]);
                 var endTime = new Date(row[3]);
                 
-                // Önemli: Sarı rengi doğru şekilde algıla
-                var isHighlighted = row[7] === '#FFD700';
-                console.log('Row:', row[0], 'Highlight status:', isHighlighted, 'Color:', row[7]);
+                // Doğrudan iş emri kodunu kontrol edelim
+                var normalizeForComparison = function(code) {
+                  if (!code) return '';
+                  return String(code).replace(/\s+/g, '').toUpperCase();
+                };
+                
+                var highlightedOrderCodeNorm = normalizeForComparison('${highlightedOrderCode || ""}');
+                var machineNameNorm = normalizeForComparison(machineName);
+                
+                // Vurgulama kontrolü - tam eşleşme yerine içerme kontrolü yapıyoruz
+                var isHighlighted = false;
+                
+                if (highlightedOrderCodeNorm && machineNameNorm.includes(highlightedOrderCodeNorm)) {
+                  isHighlighted = true;
+                  console.log('Eşleşme bulundu:', machineName, 'için', highlightedOrderCodeNorm);
+                }
+                
+                // Bar rengi - sabit renkler kullanıyoruz
+                var barColor = isHighlighted ? '#FFFF00' : '#4285F4'; // Sarı veya mavi
+                
+                console.log('Row:', machineName, '- Highlight:', isHighlighted, '- Color:', barColor);
                 
                 // Tooltip HTML'i
                 var tooltipHtml = '<div class="tooltip-content">' +
@@ -99,24 +117,28 @@ const ChartFrame = ({ chartData, highlightedOrderCode }) => {
                   '<div class="tooltip-row"><span class="tooltip-label">End:</span> ' + formatDate(endTime) + '</div>' +
                   '<div class="tooltip-row"><span class="tooltip-label">Work Order:</span> ' + 
                     (isHighlighted ? 
-                      ('<span style="color:#FFD700;font-weight:bold;text-shadow:0px 0px 1px #000;">' + '${highlightedOrderCode || "MFG-5"}' + '</span>') : 
-                      (row[8]?.includes('MFG-5') ? 'MFG-5' : 'MFG-5')) + 
+                      ('<span style="color:#FFFF00;font-weight:bold;text-shadow:0px 0px 1px #000;">' + '${highlightedOrderCode || ""}' + '</span>') : 
+                      (row[8]?.includes('MFG-5') ? 'MFG-5' : '')) + 
                   '</div>' +
                   '<div class="tooltip-row"><span class="tooltip-label">Customer:</span> ATLAS</div>' +
-                  (isHighlighted ? '<div class="tooltip-row" style="margin-top:8px;font-weight:bold;color:#FFD700;text-shadow:0px 0px 1px #000;">★ Bu görev vurgulanmıştır ★</div>' : '') +
+                  (isHighlighted ? '<div class="tooltip-row" style="margin-top:8px;font-weight:bold;color:#FFFF00;text-shadow:0px 0px 1px #000;">★ Bu görev vurgulanmıştır ★</div>' : '') +
                 '</div>';
                 
                 rows.push([
                   taskId,
                   machineName,
-                  isHighlighted ? 'highlighted' : 'normal',  // Resource sütunu - bar rengini belirler
                   startTime,
                   endTime,
                   null,
                   100,
                   null,
+                  'stroke-color: ' + barColor + '; fill-color: ' + barColor + ';',
                   tooltipHtml
                 ]);
+                
+                if (isHighlighted) {
+                  console.log('Highlighting applied for:', machineName, 'with color:', barColor);
+                }
               });
               
               data.addRows(rows);
@@ -150,21 +172,7 @@ const ChartFrame = ({ chartData, highlightedOrderCode }) => {
                     strokeWidth: 1
                   },
                   innerGridTrack: { fill: '#f7f7f7' },
-                  innerGridDarkTrack: { fill: '#f2f2f2' },
-                  palette: [
-                    {
-                      // normal (index 0) - mavi
-                      color: '#4285F4',
-                      dark: '#3367D6', 
-                      light: '#A9C4F5'
-                    },
-                    {
-                      // highlighted (index 1) - sarı
-                      color: '#FFD700',
-                      dark: '#FFC107',
-                      light: '#FFF59D'
-                    }
-                  ]
+                  innerGridDarkTrack: { fill: '#f2f2f2' }
                 },
                 backgroundColor: '#F5F5F5',
                 tooltip: { 
@@ -177,6 +185,8 @@ const ChartFrame = ({ chartData, highlightedOrderCode }) => {
                   minorGridlines: {count: 0}
                 }
               };
+              
+              console.log('Chart options set without palette - using direct colors');
 
               var chart = new google.visualization.Gantt(document.getElementById('chart_div'));
               

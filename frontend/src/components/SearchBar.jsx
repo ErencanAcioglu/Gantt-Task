@@ -14,13 +14,6 @@ const SearchBar = ({ onSearchResult }) => {
     'TUP ACMA', 'YIKAMA', 'FINAL KALITE KONTROL'
   ];
 
-  useEffect(() => {
-    const defaultOrder = 'MFG-5';
-    console.log(`Otomatik iş emri seçiliyor: ${defaultOrder}`);
-    setOrderCode(defaultOrder);
-    handleSearchWithParam(defaultOrder);
-  }, []);
-
   const normalizeOrderCode = (code) => {
     let normalized = code.trim().toUpperCase().replace(/\s+/g, '');
     
@@ -41,7 +34,7 @@ const SearchBar = ({ onSearchResult }) => {
     }
 
     try {
-      setLoading(true);
+    setLoading(true);
       setError(null);
       setSuccess(false);
       

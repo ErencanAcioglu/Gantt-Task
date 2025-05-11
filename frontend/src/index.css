@@ -119,3 +119,312 @@ button:focus-visible {
   font-size: 18px;
   color: #666;
 }
+
+.gantt-error {
+  background-color: #fee;
+  border: 1px solid #f99;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 20px;
+  text-align: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.gantt-error h3 {
+  color: #c00;
+  margin-bottom: 10px;
+}
+
+.gantt-error button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.gantt-error button:hover {
+  background-color: #0056b3;
+}
+
+/* App container */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  background-color: #f8f9fa;
+}
+
+header {
+  background-color: #4285F4;
+  color: white;
+  padding: 1rem;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+main {
+  flex: 1;
+  padding: 1rem;
+}
+
+.content-wrapper {
+  display: flex;
+  gap: 1.5rem;
+  height: 100%;
+}
+
+.horizontal {
+  flex-direction: row;
+}
+
+@media (max-width: 768px) {
+  .horizontal {
+    flex-direction: column;
+  }
+}
+
+.search-section {
+  flex: 0 0 20%;
+  background-color: white;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.chart-section {
+  flex: 1;
+  background-color: white;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+
+footer {
+  background-color: #f1f3f4;
+  text-align: center;
+  padding: 1rem;
+  margin-top: auto;
+  border-top: 1px solid #e1e4e8;
+}
+
+/* Search Bar */
+.search-container {
+  margin-bottom: 1rem;
+}
+
+.search-input-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.search-input-group input {
+  background-color: #ffffff;
+  color: #000000;
+  border: 1px solid #cccccc;
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.search-input-group input:focus {
+  border-color: #4285F4;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
+}
+
+.search-input-group input.error-input {
+  border-color: #ff0000;
+  background-color: #fff8f8;
+  box-shadow: 0 0 5px rgba(255, 0, 0, 0.2);
+}
+
+.search-button {
+  background-color: #4285F4;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  min-width: 80px;
+  transition: background-color 0.2s;
+}
+
+.search-button:hover {
+  background-color: #3367d6;
+}
+
+.search-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.search-error {
+  margin-top: 0.5rem;
+  color: #e53935;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.search-success {
+  margin-top: 0.5rem;
+  color: #4caf50;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+/* İş emri arama için input stil kuralları */
+.search-input-group input::placeholder {
+  color: #666;
+  opacity: 1;
+}
+
+/* Gantt Chart */
+.gantt-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.gantt-title {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.chart-wrapper {
+  width: 100%;
+  min-height: 500px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.time-range-display {
+  text-align: right;
+  font-size: 0.85rem;
+  color: #666;
+  margin-top: 0.5rem;
+}
+
+/* Spinner for chart loading */
+.spinner-animation {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(66, 133, 244, 0.2);
+  border-radius: 50%;
+  border-top-color: #4285F4;
+  margin: 0 auto 1rem;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spinner-content {
+  text-align: center;
+}
+
+.spinner-details {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: #888;
+}
+
+/* Google Chart container */
+.google-chart {
+  background-color: #F5F5F5;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+/* Machine list item styles */
+.machine-item {
+  background-color: #4285F4;
+  color: white; 
+  padding: 12px 16px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+}
+
+.machine-item.highlighted {
+  background-color: #FFD700;
+  color: #333;
+  border-left: 4px solid #FF9900;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+  position: relative;
+}
+
+.machine-item.highlighted::after {
+  content: '★';
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  color: #FF9900;
+  font-size: 18px;
+}
+
+.machine-item.in-progress {
+  border-left: 4px solid #00C853;
+}
+
+.machine-name {
+  font-weight: bold;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.time-range, .order-info {
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.highlight-badge {
+  display: inline-block;
+  background-color: #FF9900;
+  color: white;
+  padding: 3px 6px;
+  border-radius: 3px;
+  font-size: 11px;
+  margin-top: 8px;
+}
+
+.progress-badge {
+  display: inline-block;
+  background-color: #00C853;
+  color: white;
+  padding: 3px 6px;
+  border-radius: 3px;
+  font-size: 11px;
+  margin-top: 8px;
+  margin-left: 6px;
+}
+
+/* Override for Google Chart tooltips */
+.google-visualization-tooltip {
+  background-color: #333 !important;
+  color: white !important;
+  border: none !important;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.4) !important;
+  padding: 8px !important;
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif !important;
+  max-width: 300px !important;
+  z-index: 9999 !important;
+  border-radius: 6px !important;
+}

@@ -5,7 +5,6 @@ from fastapi.middleware.cors import CORSMiddleware
 import httpx
 import os
 from dotenv import load_dotenv
-from mangum import Mangum
 
 load_dotenv()
 
@@ -28,8 +27,9 @@ SUPABASE_KEY = os.getenv("SUPABASE_API_KEY") or "eyJhbGciOiJIUzI1NiIsInR5cCI6Ikp
 print(f"Starting with Supabase URL: {SUPABASE_URL}")
 print(f"API Key length: {len(SUPABASE_KEY) if SUPABASE_KEY else 0}")
 
-# Vercel için handler fonksiyonu
-handler = Mangum(app)
+# Vercel için lambda handler
+async def handler(request, context):
+    return await app(request, context)
 
 @app.get("/")
 async def root():

@@ -77,6 +77,11 @@ main {
   padding: 10px;
 }
 
+.fullscreen-main {
+  padding: 0;
+  height: calc(100% - var(--header-height) - var(--footer-height));
+}
+
 .content-wrapper {
   display: flex;
   flex-direction: column;
@@ -88,7 +93,6 @@ main {
 /* İçerik düzeni yatay olarak ayarlamak için */
 .content-wrapper.horizontal {
   flex-direction: row;
-  gap: 15px;
   height: 100%;
   width: 100%;
 }
@@ -98,6 +102,9 @@ main {
   flex-shrink: 0;
   height: 100%;
   overflow-y: auto;
+  background-color: white;
+  padding: 15px;
+  border-right: 1px solid var(--border-color);
 }
 
 .horizontal .chart-section {
@@ -105,16 +112,12 @@ main {
   min-width: 0;
   height: 100%;
   overflow: hidden;
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 /* Arama Bölümü */
-.search-section {
-  padding: 15px;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: var(--shadow);
-}
-
 .search-section h2 {
   margin-bottom: 10px;
   font-size: 1.2rem;
@@ -177,17 +180,12 @@ main {
   display: inline-block;
 }
 
-/* Chart Bölümü - Daha fazla alan kaplaması için güncellemeler */
+/* Chart Bölümü */
 .chart-section {
-  padding: 12px;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: var(--shadow);
-  flex: 1;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  min-height: 0;
+  background-color: white;
 }
 
 .gantt-container {
@@ -198,7 +196,7 @@ main {
 }
 
 .gantt-title {
-  margin-bottom: 8px;
+  margin: 10px 15px;
   font-size: 1.2rem;
   color: var(--primary-color);
   font-weight: 600;
@@ -207,152 +205,40 @@ main {
 .chart-wrapper {
   position: relative;
   overflow: hidden;
-  border-radius: 4px;
-  background-color: white;
   flex: 1;
   min-height: 0;
   height: 100%;
-  padding-top: 10px; /* Add padding to ensure time axis is visible */
-  margin-top: 10px; /* Additional margin at the top */
-}
-
-/* Chart'ın tam boyutta görüntülenmesi için */
-.chart-wrapper > div {
-  height: 100% !important;
-  margin-top: 5px; /* Give some space at the top */
-}
-
-/* Google Chart'ın SVG elementlerini kontrol etmek için ek stiller */
-.chart-wrapper svg {
-  overflow: visible !important;
-}
-
-.chart-wrapper svg g text {
-  font-size: 10px !important;
-  font-family: 'Segoe UI', sans-serif !important;
-  fill: #333 !important; /* Ensure text is visible */
-}
-
-/* Özel olarak zaman çizgisini (time axis) görünür kılmak için */
-.chart-wrapper svg g:first-child text {
-  fill: #333 !important;
-  font-weight: normal !important;
-  visibility: visible !important;
-}
-
-/* Yatay eksen çizgileri ve etiketleri için */
-.chart-wrapper svg g[clip-path] {
-  visibility: visible !important;
-}
-
-/* Gantt Legend */
-.gantt-legend {
-  display: flex;
-  gap: 20px;
-  margin-bottom: 10px;
-  padding: 6px 12px;
-  background-color: #f8f9fa;
-  border-radius: 4px;
-  border: 1px solid #eaecef;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.85rem;
-}
-
-.legend-color {
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  border-radius: 3px;
-  border: 1px solid rgba(0,0,0,0.1);
-}
-
-.legend-text {
-  color: #666;
-}
-
-/* Meta bölgesi için stillerimizi ekleyelim */
-.gantt-meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-  padding: 6px 12px;
-  background-color: #f0f4f8;
-  border-radius: 4px;
-  border-left: 3px solid var(--primary-color);
-}
-
-.date-range {
-  font-size: 0.85rem;
-  color: #555;
-}
-
-.date-label {
-  font-weight: 600;
-  margin-right: 8px;
-}
-
-.date-value {
-  color: var(--text-color);
+  padding: 0; 
+  margin: 0;
 }
 
 /* Yükleniyor Animasyonu */
 .loading-spinner {
-  padding: 20px;
-  text-align: center;
-  font-size: 1rem;
-  color: var(--primary-color);
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 200px;
+  height: 80%;
 }
 
-.loading-spinner::after {
-  content: "";
-  display: inline-block;
-  width: 20px;
-  height: 20px;
-  margin-left: 10px;
-  border: 2px solid var(--primary-color);
+.spinner-content {
+  text-align: center;
+}
+
+.spinner-animation {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 10px;
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-left-color: var(--primary-color);
   border-radius: 50%;
-  border-top-color: transparent;
   animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+  to { transform: rotate(360deg); }
 }
 
-/* Veri yoksa gösterilecek mesaj */
-.no-data-message {
-  padding: 30px;
-  text-align: center;
-  background-color: #f9fafb;
-  border: 1px dashed #d1d5db;
-  color: #6b7280;
-  border-radius: 6px;
-  margin: 20px 0;
-  font-size: 0.95rem;
-}
-
-/* Tooltip stilleri için CSS içindeki değişiklikler */
-.google-visualization-tooltip {
-  background-color: #333 !important;
-  color: white !important;
-  border: none !important;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
-  border-radius: 5px !important;
-  padding: 0 !important;
-}
-
+/* Footer */
 footer {
   height: var(--footer-height);
   display: flex;
@@ -365,145 +251,101 @@ footer {
 
 footer p {
   color: #6b7280;
-  font-size: 0.75rem;
-  margin: 0;
+  font-size: 0.9rem;
 }
 
-/* Kompakt form için ek stil */
-.compact-form {
-  margin: 0;
-  width: 100%;
-}
-
-/* Küçük ekranlarda otomatik dikey düzen */
-@media (max-width: 992px) {
-  .content-wrapper.horizontal {
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .horizontal .search-section {
-    width: 100%;
-    max-height: none;
-    height: auto;
-  }
-  
-  .horizontal .chart-section {
-    height: calc(100% - 130px);
-  }
-  
-  .search-section h2 {
-    font-size: 1.1rem;
-  }
-  
-  .gantt-title {
-    font-size: 1.1rem;
-  }
-  
-  .search-input-group {
-    flex-direction: column;
-  }
-  
-  .search-input-group button {
-    width: 100%;
-  }
-}
-
+/* Zaman Aralığı Bilgisi */
 .time-range-footer {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 6px 0;
-  font-size: 0.85rem;
-  color: #555;
-  margin-top: 2px;
-  background-color: #f8f9fa;
-  border-radius: 4px;
-  border-top: 1px solid #eaecef;
-}
-
-/* Time range display */
-.time-range-display {
-  text-align: center;
-  margin-top: 10px;
-  font-size: 12px;
-  color: #666;
-  background-color: #f8f9fa;
-  padding: 5px;
-  border-radius: 4px;
-  border: 1px solid #eaecef;
-}
-
-/* Custom Time Axis */
-.custom-time-axis {
-  display: flex;
-  margin-bottom: 5px;
   padding: 5px 10px;
-  background-color: #f0f4f8;
-  border-radius: 4px;
+  background-color: #f8f9fa;
+  border-top: 1px solid var(--border-color);
+  font-size: 0.8rem;
+}
+
+.time-range-display {
+  display: flex;
   align-items: center;
 }
 
 .time-label {
-  font-weight: bold;
-  margin-right: 10px;
-  color: #333;
-  min-width: 40px;
+  font-weight: 600;
+  margin-right: 5px;
 }
 
-.time-scale {
-  display: flex;
-  flex: 1;
-  justify-content: space-between;
+.time-value {
+  color: #666;
 }
 
-.time-point {
-  font-size: 11px;
-  color: #555;
-  padding: 2px 4px;
-  background-color: rgba(255, 255, 255, 0.7);
-  border-radius: 3px;
-  border: 1px solid #ddd;
+/* Seçilen İş Emirleri */
+.selected-work-orders {
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid var(--border-color);
 }
 
-/* Machine list için ek stiller */
-.machine-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin: 20px 0;
-  max-height: 70vh;
-  overflow-y: auto;
-}
-
-.machine-item {
-  display: flex;
-  justify-content: space-between;
-  padding: 12px 15px;
-  border-radius: 6px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  color: white;
-  position: relative;
-}
-
-.machine-name {
-  font-weight: bold;
+.selected-work-orders h3 {
   font-size: 1rem;
+  color: var(--primary-color);
+  margin-bottom: 10px;
 }
 
-.time-range {
-  font-size: 0.9rem;
-  opacity: 0.9;
+.selected-work-orders ul {
+  list-style-type: none;
+  padding: 0;
 }
 
-.highlight-badge {
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  background: #FF9900;
-  color: white;
-  font-size: 0.7rem;
-  padding: 2px 6px;
-  border-radius: 10px;
-  font-weight: bold;
+.selected-work-orders li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 8px;
+  background-color: #f0f7ff;
+  border: 1px solid #d1e3ff;
+  border-radius: 4px;
+  margin-bottom: 5px;
+}
+
+.work-order-item {
+  font-weight: 500;
+  color: var(--primary-color);
+}
+
+.remove-btn {
+  background-color: transparent;
+  color: #666;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.remove-btn:hover {
+  background-color: #f1f1f1;
+  color: #333;
+}
+
+/* Mobile Responsive için düzenlemeler */
+@media (max-width: 992px) {
+  .content-wrapper.horizontal {
+    flex-direction: column;
+  }
+
+  .horizontal .search-section {
+    width: 100%;
+    height: auto;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  .horizontal .chart-section {
+    height: calc(100% - 300px);
+  }
 }

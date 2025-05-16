@@ -1,11 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
+import { SAMPLE_MACHINE_TASKS } from './sampleData';
 
 // Supabase URL ve API anahtarı
 const supabaseUrl = 'https://lvyuwgonmtbqlftwamlc.supabase.co';
 const supabaseKey = import.meta.env.VITE_SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2eXV3Z29ubXRicWxmdHdhbWxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY5NjExNjUsImV4cCI6MjA2MjUzNzE2NX0.Xm5Q68KUYOrGXQqz9PjnxI9myQDktF045G_17t1v-vI';
 
 // Backend API URL - Backend'in çalışacağı port
-const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
+const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://127.0.0.1:8000';
 
 // Supabase bağlantısını test et
 console.log('Supabase bağlantısı kuruluyor:', supabaseUrl);
@@ -46,49 +47,46 @@ export const getWorkOrders = async () => {
   }
 };
 
-// Makine görevlerini getir - doğrudan Supabase'den
+// Makine görevlerini getir - Backend API üzerinden
 export const getMachineTasks = async () => {
-  console.log('Makine görevleri doğrudan Supabase\'den getiriliyor...');
+  console.log('Makine görevleri Backend API üzerinden getiriliyor...');
   
   try {
-    const { data, error } = await supabase
-      .from('machinetasks')
-      .select('*');
+    // Backend API'ye bağlan
+    const response = await fetch(`${backendUrl}/tasks`);
     
-    if (error) {
-      console.error('Makine görevleri getirilirken Supabase hatası:', error);
-      throw error;
+    if (!response.ok) {
+      console.error(`API hatası: ${response.status} ${response.statusText}`);
+      console.log('Backend bağlantısı başarısız. Örnek veri kullanılıyor...');
+      console.log(`${SAMPLE_MACHINE_TASKS.length} adet örnek görev yüklendi`);
+      
+      // Konsola örnek verilerdeki benzersiz makine listesini yazdır
+      const uniqueMachines = {};
+      SAMPLE_MACHINE_TASKS.forEach(task => {
+        uniqueMachines[task.machine_name] = true;
+      });
+      console.log('Örnek verilerdeki makineler:', Object.keys(uniqueMachines));
+      
+      return SAMPLE_MACHINE_TASKS;
     }
+    
+    const data = await response.json();
     
     if (!data || data.length === 0) {
-      console.warn('Supabase machinetasks tablosunda veri bulunamadı');
-      throw new Error('Makine görevleri bulunamadı');
+      console.warn('API yanıtında veri bulunamadı, örnek veri kullanılıyor...');
+      return SAMPLE_MACHINE_TASKS;
     }
     
-    // Makine görevlerini örnekteki görünüme uygun şekilde düzenle
-    const enrichedData = data.map(task => {
-      // İş emri bilgisini workorders tablosundan alacak şekilde düzenle
-      const orderCode = task.work_order_id || 'MFG-5';
-      
-      return {
-        ...task,
-        machine_name: task.machine_name || '',  // SARDON, RAM 1, YIKAMA vb.
-        customer: 'ATLAS',  // Örnek görseldeki veritabanında ATLAS var
-        work_order_id: orderCode,
-        start_time: task.start_time,
-        end_time: task.end_time
-      };
-    });
-    
-    console.log(`${enrichedData.length} adet makine görevi getirildi`);
-    return enrichedData;
+    console.log(`${data.length} adet makine görevi getirildi`);
+    return data;
   } catch (err) {
     console.error('Makine görevleri getirilirken beklenmeyen hata:', err);
-    throw err;
+    console.log('Hata nedeniyle örnek veri kullanılıyor...');
+    return SAMPLE_MACHINE_TASKS;
   }
 };
 
-// İş emri numarasına göre görevleri getir (MFG-5 için)
+// İş emri numarasına göre görevleri getir
 export const getTasksByOrderCode = async (orderCode) => {
   console.log(`"${orderCode}" iş emrine ait görevler getiriliyor...`);
   
@@ -98,98 +96,29 @@ export const getTasksByOrderCode = async (orderCode) => {
   }
   
   try {
-    // Özel iş emri kodları için dönüşüm
-    let transformedCode = orderCode.trim();
+    // Backend API'ye bağlan
+    const response = await fetch(`${backendUrl}/highlight?order_code=${encodeURIComponent(orderCode)}`);
     
-    // MFG-5 özel kontrolü
-    if (transformedCode.toUpperCase().includes('MFG')) {
-      console.log('MFG-5 iş emri özel olarak işleniyor');
-      
-      // Tüm görevleri al
-      const { data, error } = await supabase.from('machinetasks').select('*');
-      
-      if (error) {
-        console.error('Makine görevleri getirilirken Supabase hatası:', error);
-        throw error;
+    if (!response.ok) {
+      // 404 hatasını özel olarak ele al
+      if (response.status === 404) {
+        console.warn(`"${orderCode}" iş emri bulunamadı`);
+        throw new Error(`"${orderCode}" iş emri bulunamadı`);
       }
       
-      // MFG-5 iş emirlerini filtrele (Örnek görseldeki sarı vurgulanan bloklar)
-      const enrichedData = data
-        .filter(task => {
-          // Görsel örnekteki belirli makineler için MFG-5 işaretlenmiş
-          const taskCode = String(task.work_order_id || '').toUpperCase().trim();
-          return taskCode === 'MFG-5' || taskCode.includes('MFG-5');
-        })
-        .map(task => ({
-          ...task,
-          customer: 'ATLAS'
-        }));
-      
-      console.log(`MFG-5 için ${enrichedData.length} adet görev getirildi`);
-      return enrichedData;
+      console.error(`API hatası: ${response.status} ${response.statusText}`);
+      throw new Error(`API hatası: ${response.status} ${response.statusText}`);
     }
     
-    // RAM1 özel kontrolü
-    if (transformedCode.toUpperCase().replace(/\s+/g, '').includes('RAM1')) {
-      console.log('RAM1 iş emri özel olarak işleniyor');
-      
-      // Tüm görevleri al
-      const { data, error } = await supabase.from('machinetasks').select('*');
-      
-      if (error) {
-        console.error('Makine görevleri getirilirken Supabase hatası:', error);
-        throw error;
-      }
-      
-      // RAM1 iş emirlerini filtrele (Örnek görseldeki sarı vurgulanan bloklar)
-      const enrichedData = data
-        .filter(task => {
-          const taskCode = String(task.work_order_id || '').toUpperCase().replace(/\s+/g, '');
-          return taskCode === 'RAM1' || taskCode.includes('RAM1');
-        })
-        .map(task => ({
-          ...task,
-          customer: 'ATLAS'
-        }));
-      
-      console.log(`RAM1 için ${enrichedData.length} adet görev getirildi`);
-      return enrichedData;
-    }
+    const data = await response.json();
     
-    // Diğer iş emirleri için
-    transformedCode = transformedCode.replace(/\s+/g, '').toUpperCase();
-    
-    // Doğrudan Supabase'e bağlan
-    console.log('Doğrudan Supabase\'den veri çekiliyor...');
-    const { data, error } = await supabase.from('machinetasks').select('*');
-    
-    if (error) {
-      console.error('İş emri görevleri getirilirken Supabase hatası:', error);
-      throw error;
-    }
-    
-    // İş emri kodlarını karşılaştırarak filtrele
-    const filteredData = data.filter(task => {
-      const taskCode = String(task.work_order_id || '').replace(/\s+/g, '').toUpperCase();
-      // Tam eşleşme veya kısmi eşleşme kontrolü
-      return taskCode === transformedCode || 
-             taskCode.includes(transformedCode) || 
-             transformedCode.includes(taskCode);
-    });
-    
-    if (!filteredData || filteredData.length === 0) {
-      console.warn(`Supabase'de "${orderCode}" için veri bulunamadı`);
+    if (!data || data.length === 0) {
+      console.warn(`API yanıtında "${orderCode}" için veri bulunamadı`);
       throw new Error(`"${orderCode}" iş emri için görev bulunamadı`);
     }
     
-    // Görevlere müşteri bilgisini ekle
-    const enrichedData = filteredData.map(task => ({
-      ...task,
-      customer: 'ATLAS'
-    }));
-    
-    console.log(`${enrichedData.length} adet görev getirildi:`, enrichedData);
-    return enrichedData;
+    console.log(`${data.length} adet görev getirildi:`, data);
+    return data;
   } catch (err) {
     console.error('Görevler getirilirken beklenmeyen hata:', err);
     throw err;

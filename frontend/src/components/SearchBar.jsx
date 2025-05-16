@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import { getTasksByOrderCode } from '../services/supabase';
+import { useState } from 'react';
 
 const SearchBar = ({ onSearchResult }) => {
   const [orderCode, setOrderCode] = useState('');
@@ -34,7 +33,7 @@ const SearchBar = ({ onSearchResult }) => {
     }
 
     try {
-    setLoading(true);
+      setLoading(true);
       setError(null);
       setSuccess(false);
       

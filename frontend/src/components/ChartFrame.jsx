@@ -1,11 +1,12 @@
 import { useEffect, useRef } from 'react';
+import moment from 'moment';
 
 // ChartFrame bileşeni - iframe içinde Google Charts gösterecek
-const ChartFrame = ({ chartData, highlightedOrderCode }) => {
+const ChartFrame = ({ data, dateRange }) => {
   const iframeRef = useRef(null);
 
   useEffect(() => {
-    if (!chartData || chartData.length <= 1 || !iframeRef.current) return;
+    if (!data || data.length <= 1 || !iframeRef.current) return;
 
     const iframe = iframeRef.current;
     const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
@@ -19,8 +20,17 @@ const ChartFrame = ({ chartData, highlightedOrderCode }) => {
           <meta charset="utf-8">
           <title>Gantt Chart</title>
           <style>
-            body { margin: 0; padding: 0; overflow: hidden; background-color: #F5F5F5; font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; }
-            #chart_div { width: 100%; height: 100%; }
+            body { 
+              margin: 0; 
+              padding: 0; 
+              overflow: hidden; 
+              background-color: #F5F5F5; 
+              font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; 
+            }
+            #chart_div { 
+              width: 100%; 
+              height: 100vh; 
+            }
             
             /* Google Chart stillerini geçersiz kıl */
             .google-visualization-tooltip {
@@ -60,6 +70,19 @@ const ChartFrame = ({ chartData, highlightedOrderCode }) => {
             .tooltip-label {
               font-weight: bold;
             }
+
+            /* Ekstra stil düzenlemeleri */
+            text {
+              font-family: 'Segoe UI', sans-serif !important;
+            }
+            
+            .google-visualization-tooltip {
+              background: #333 !important;
+              border: none !important;
+              box-shadow: 0 2px 10px rgba(0,0,0,0.4) !important;
+              padding: 0px !important;
+              border-radius: 3px !important;
+            }
           </style>
           <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
           <script type="text/javascript">
@@ -67,135 +90,357 @@ const ChartFrame = ({ chartData, highlightedOrderCode }) => {
             google.charts.setOnLoadCallback(drawChart);
 
             function drawChart() {
-              var data = new google.visualization.DataTable();
-              data.addColumn('string', 'Task ID');
-              data.addColumn('string', 'Task Name');
-              data.addColumn('date', 'Start Date');
-              data.addColumn('date', 'End Date');
-              data.addColumn('number', 'Duration');
-              data.addColumn('number', 'Percent Complete');
-              data.addColumn('string', 'Dependencies');
-              data.addColumn({type: 'string', role: 'style'});
-              data.addColumn({type: 'string', role: 'tooltip', p: {html: true}});
-
-              var rawData = ${JSON.stringify(chartData.slice(1))};
-              var rows = [];
-              
-              // Satırları işle
-              rawData.forEach(function(row) {
-                var taskId = row[1];
-                var machineName = row[0];
-                var startTime = new Date(row[2]);
-                var endTime = new Date(row[3]);
+              try {
+                // Chart verilerini doğrudan JSON olarak al
+                var chartData = ${JSON.stringify(data)};
                 
-                // Doğrudan iş emri kodunu kontrol edelim
-                var normalizeForComparison = function(code) {
-                  if (!code) return '';
-                  return String(code).replace(/\s+/g, '').toUpperCase();
-                };
+                console.log('Veri işleme başlıyor...', chartData.length > 1 ? chartData.length - 1 : 0, 'satır veri mevcut');
                 
-                var highlightedOrderCodeNorm = normalizeForComparison('${highlightedOrderCode || ""}');
-                var machineNameNorm = normalizeForComparison(machineName);
-                
-                // Vurgulama kontrolü - tam eşleşme yerine içerme kontrolü yapıyoruz
-                var isHighlighted = false;
-                
-                if (highlightedOrderCodeNorm && machineNameNorm.includes(highlightedOrderCodeNorm)) {
-                  isHighlighted = true;
-                  console.log('Eşleşme bulundu:', machineName, 'için', highlightedOrderCodeNorm);
+                if (!chartData || chartData.length <= 1) {
+                  throw new Error('Gösterilecek veri bulunamadı');
                 }
                 
-                // Bar rengi - sabit renkler kullanıyoruz
-                var barColor = isHighlighted ? '#FFFF00' : '#4285F4'; // Sarı veya mavi
+                // Veri satırlarını önceden işle ve tarih değerlerini düzelt
+                for (var i = 1; i < chartData.length; i++) {
+                  var row = chartData[i];
+                  
+                  // Satır veri hatalarını kontrol et
+                  if (!row || row.length < 4) {
+                    console.error('Satır #' + i + ' geçersiz veri formatı:', row);
+                    continue;
+                  }
+                  
+                  // Sadece Y-ekseninde gösterilecek makine adının geçerli olduğundan emin ol
+                  if (!row[0] || typeof row[0] !== 'string' || row[0].length === 0) {
+                    console.error("HATA: Geçersiz Y-ekseni değeri:", row[0]);
+                    row[0] = "Bilinmeyen Makine";
+                  }
+                  
+                  // Bar içinde gösterilecek iş emri kodunun geçerli olduğundan emin ol
+                  if (!row[1] || typeof row[1] !== 'string' || row[1].length === 0) {
+                    console.error("HATA: Geçersiz bar değeri:", row[1]);
+                    row[1] = "Bilinmeyen İş";
+                  }
+                  
+                  // Tarihleri her zaman Date nesneleri olarak ayarla
+                  try {
+                    if (row[2]) {
+                      if (typeof row[2] === 'string') {
+                        row[2] = new Date(row[2]);
+                        if (isNaN(row[2].getTime())) {
+                          console.error('Satır #' + i + ' geçersiz başlangıç tarihi:', row[2]);
+                          row[2] = new Date('2024-12-18T08:00:00');
+                        }
+                      } else if (row[2] && typeof row[2] === 'object') {
+                        if (row[2] instanceof Date) {
+                          // Zaten Date objesi, bir şey yapma
+                        } else if (row[2].hasOwnProperty('value')) {
+                          // Google Chart'ın özel tarih formatı durumunu ele al
+                          row[2] = new Date(row[2].value);
+                        } else {
+                          // Diğer objeler için bir tahmin yap
+                          console.warn('Satır #' + i + ' beklenmeyen tarih formatı:', row[2]);
+                          row[2] = new Date('2024-12-18T08:00:00');
+                        }
+                      }
+                    } else {
+                      // Null/undefined tarihi varsayılan değere ayarla
+                      row[2] = new Date('2024-12-18T08:00:00');
+                    }
+                    
+                    if (row[3]) {
+                      if (typeof row[3] === 'string') {
+                        row[3] = new Date(row[3]);
+                        if (isNaN(row[3].getTime())) {
+                          console.error('Satır #' + i + ' geçersiz bitiş tarihi:', row[3]);
+                          row[3] = new Date('2024-12-18T10:00:00');
+                        }
+                      } else if (row[3] && typeof row[3] === 'object') {
+                        if (row[3] instanceof Date) {
+                          // Zaten Date objesi, bir şey yapma
+                        } else if (row[3].hasOwnProperty('value')) {
+                          // Google Chart'ın özel tarih formatı durumunu ele al
+                          row[3] = new Date(row[3].value);
+                        } else {
+                          // Diğer objeler için bir tahmin yap
+                          console.warn('Satır #' + i + ' beklenmeyen tarih formatı:', row[3]);
+                          row[3] = new Date('2024-12-18T10:00:00');
+                        }
+                      }
+                    } else {
+                      // Null/undefined tarihi varsayılan değere ayarla
+                      row[3] = new Date('2024-12-18T10:00:00');
+                    }
+                  } catch (dateErr) {
+                    console.error('Satır #' + i + ' tarih dönüştürme hatası:', dateErr);
+                    row[2] = new Date('2024-12-18T08:00:00');
+                    row[3] = new Date('2024-12-18T10:00:00');
+                  }
+                }
                 
-                console.log('Row:', machineName, '- Highlight:', isHighlighted, '- Color:', barColor);
+                console.log('Veri işleme tamamlandı, datatable oluşturuluyor...');
                 
-                // Tooltip HTML'i
-                var tooltipHtml = '<div class="tooltip-content">' +
-                  '<div class="tooltip-title">Machine: ' + machineName + '</div>' +
-                  '<div class="tooltip-row"><span class="tooltip-label">Start:</span> ' + formatDate(startTime) + '</div>' +
-                  '<div class="tooltip-row"><span class="tooltip-label">End:</span> ' + formatDate(endTime) + '</div>' +
-                  '<div class="tooltip-row"><span class="tooltip-label">Work Order:</span> ' + 
-                    (isHighlighted ? 
-                      ('<span style="color:#FFFF00;font-weight:bold;text-shadow:0px 0px 1px #000;">' + '${highlightedOrderCode || ""}' + '</span>') : 
-                      (row[8]?.includes('MFG-5') ? 'MFG-5' : '')) + 
-                  '</div>' +
-                  '<div class="tooltip-row"><span class="tooltip-label">Customer:</span> ATLAS</div>' +
-                  (isHighlighted ? '<div class="tooltip-row" style="margin-top:8px;font-weight:bold;color:#FFFF00;text-shadow:0px 0px 1px #000;">★ Bu görev vurgulanmıştır ★</div>' : '') +
-                '</div>';
+                // Google Charts DataTable oluştur
+                var dataTable = new google.visualization.DataTable();
                 
-                rows.push([
-                  taskId,
-                  machineName,
-                  startTime,
-                  endTime,
-                  null,
-                  100,
-                  null,
-                  'stroke-color: ' + barColor + '; fill-color: ' + barColor + ';',
-                  tooltipHtml
+                // Sütunları doğru sırayla ekle
+                dataTable.addColumn('string', 'Machine');     // İlk sütun: Y-ekseni - MAKİNE ADI
+                dataTable.addColumn('string', 'Work Order');  // İkinci sütun: Bar içinde gösterilecek - İŞ EMRİ
+                dataTable.addColumn('date', 'Start Date');
+                dataTable.addColumn('date', 'End Date');
+                dataTable.addColumn('number', 'Duration');
+                dataTable.addColumn('number', 'Percent Complete');
+                dataTable.addColumn('string', 'Dependencies');
+                dataTable.addColumn('string', 'style');
+                dataTable.addColumn({type: 'string', role: 'tooltip', p: {html: true}});
+                
+                // Debug için sütun yapısını kontrol et
+                console.log("Tablo sütunları:", [
+                  'Machine (string) - Y ekseni', 
+                  'Work Order (string) - Bar içinde gösterilir', 
+                  'Start Date (date)', 
+                  'End Date (date)', 
+                  'Duration (number)', 
+                  'Percent (number)', 
+                  'Dependencies (string)', 
+                  'style (string)', 
+                  'tooltip (string/html)'
                 ]);
                 
-                if (isHighlighted) {
-                  console.log('Highlighting applied for:', machineName, 'with color:', barColor);
+                // Makine adları analizi
+                var uniqueMachines = {};
+                for (var i = 1; i < chartData.length; i++) {
+                  var machine = chartData[i][0];
+                  uniqueMachines[machine] = true;
                 }
-              });
-              
-              data.addRows(rows);
+                
+                console.log('Benzersiz makine sayısı:', Object.keys(uniqueMachines).length);
+                console.log('Makine adları:', Object.keys(uniqueMachines));
+                
+                console.log('ChartFrame - CHART DATA BAŞLIK:', chartData[0]);
+                console.log('ChartFrame - CHART DATA İLK SATIR:', chartData[1]);
+                console.log('ChartFrame - CHART DATA MAKINE ADLARI (Y-eksen):', [...new Set(chartData.slice(1).map(function(row) { return row[0]; }))]);
+                
+                // Datatable'a satırları ekle
+                console.log('ChartFrame - EKLENEN SATIR ÖRNEKLERİ:');
+                for (var i = 1; i < Math.min(chartData.length, 5); i++) {
+                  console.log("ChartFrame - Satır #" + i + ": Y-eksen=" + chartData[i][0] + ", Bar=" + chartData[i][1]);
+                  
+                  dataTable.addRow([
+                    chartData[i][0],    // Y-ekseni - Makine adı
+                    chartData[i][1],    // Bar - İş emri kodu 
+                    chartData[i][2],    // Başlangıç
+                    chartData[i][3],    // Bitiş
+                    chartData[i][4],    // Süre
+                    chartData[i][5],    // Tamamlanma
+                    chartData[i][6],    // Bağımlılıklar 
+                    chartData[i][7],    // Stil
+                    chartData[i][8]     // Tooltip
+                  ]);
+                }
+                
+                // Her veri satırını ekledik mi kontrol et
+                var totalRows = chartData.length - 1; // Başlık satırını çıkar
+                var addedRows = 0;
+                
+                // Tüm veri satırlarını ekleyelim
+                for (var i = 1; i < chartData.length; i++) {
+                  try {
+                    dataTable.addRow([
+                      chartData[i][0],    // Y-ekseni - Makine adı
+                      chartData[i][1],    // Bar - İş emri kodu 
+                      chartData[i][2],    // Başlangıç
+                      chartData[i][3],    // Bitiş
+                      chartData[i][4],    // Süre
+                      chartData[i][5],    // Tamamlanma
+                      chartData[i][6],    // Bağımlılıklar 
+                      chartData[i][7],    // Stil
+                      chartData[i][8]     // Tooltip
+                    ]);
+                    addedRows++;
+                  } catch (err) {
+                    console.error("Satır #" + i + " eklenirken hata:", err);
+                  }
+                }
+                console.log("Toplam " + addedRows + " / " + totalRows + " satır eklendi");
+                
+                // Tarih aralığı ayarla - Basitleştirilmiş yaklaşım
+                var startDate = new Date('2024-12-18T05:00:00');
+                var endDate = new Date('2024-12-19T20:00:00');
+                
+                console.log('Date range:', startDate, 'to', endDate);
 
-              // Tarih formatlama yardımcı fonksiyonu
-              function formatDate(date) {
-                function pad(n) { return n < 10 ? '0' + n : n; }
-                return date.getFullYear() + '-' + 
-                  pad(date.getMonth() + 1) + '-' + 
-                  pad(date.getDate()) + ' ' + 
-                  pad(date.getHours()) + ':' + 
-                  pad(date.getMinutes()) + ':' + 
-                  pad(date.getSeconds());
+                var options = {
+                  height: window.innerHeight,
+                  width: '100%',
+                  gantt: {
+                    trackHeight: 30,  // Makine başına track yüksekliği
+                    barHeight: 20,    // Bar yüksekliği
+                    defaultStartDate: startDate,
+                    shadowEnabled: true,  // Gölgelendirmeyi etkinleştir
+                    shadowColor: '#888',  // Gölge rengi
+                    shadowOffset: 2,      // Gölge kaydırma
+                    labelMaxWidth: 200,   // Makine adlarının genişliği - daha geniş
+                    innerGridHorizontalSpacing: 20, // Increase spacing
+                    labelStyle: {         // Makine adları sitili
+                      fontName: 'Segoe UI',
+                      fontSize: 12,
+                      bold: true
+                    },
+                    barLabelStyle: {     // Bar içindeki iş emri kodlarının stili
+                      fontName: 'Segoe UI',
+                      fontSize: 11,      // İş emirlerinin görünmesi için boyutu artırıldı
+                      bold: true,
+                      color: '#fff'      // Beyaz metin
+                    },
+                    
+                    // İş emri kodlarının bar içinde görünmesini sağla
+                    taskFormatter: function(task) {
+                      if (task.type === 'category') {
+                        return null;
+                      }
+                      
+                      console.log('ChartFrame - Task formatter:', task);
+                      
+                      // task.title, artık ikinci sütundaki iş emri kodunu temsil eder
+                      return {
+                        content: task.title, // İş emri kodunu göster
+                        start: task.start,
+                        end: task.end,
+                        progressValue: task.percent,
+                        title: task.title,
+                        tooltip: task.tooltip,
+                        style: task.style
+                      };
+                    },
+                    
+                    // Y ekseni sıralaması 
+                    sortTasks: false, // Varsayılan sıralamayı kapat, veri sırasına göre göster
+                    criticalPathEnabled: false, // Kritik yol özelliğini kapat
+                    
+                    innerGridHorizLine: {
+                      stroke: '#e0e0e0',
+                      strokeWidth: 1
+                    },
+                    innerGridTrack: { fill: '#f9fbff' },
+                    innerGridDarkTrack: { fill: '#f3f7ff' },
+                    
+                    // Bar içindeki iş emri kodları görünsün
+                    barCornerRadius: 3,  // Köşeleri yuvarlat
+                    barLabelPosition: 'middle', // Label'ları çubuğun ortasına konumlandır
+                    
+                    palette: [
+                      {
+                        color: '#4285F4',
+                        dark: '#3367D6',
+                        light: '#8AB4F8'
+                      }
+                    ],
+                    percentEnabled: false, // Yüzde çubuğunu gizle
+                    arrow: {
+                      angle: 0,
+                      width: 0,
+                      color: 'transparent',
+                      radius: 0
+                    }
+                  },
+                  backgroundColor: '#F5F5F5',
+                  tooltip: { 
+                    isHtml: true,
+                    trigger: 'focus' 
+                  },
+                  hAxis: {
+                    format: 'HH:mm',
+                    gridlines: {count: 12, color: '#e0e0e0'},  // Orta seviye grid çizgisi
+                    minorGridlines: {count: 0, color: '#f0f0f0'}, // Minor gridlines'ı gizle
+                    minValue: startDate,
+                    maxValue: endDate,
+                    textStyle: {fontSize: 10}
+                  },
+                  vAxis: {
+                    title: 'Makine',
+                    titleTextStyle: {
+                      color: '#333',
+                      fontSize: 12,
+                      italic: false,
+                      bold: true
+                    },
+                    textStyle: {
+                      color: '#333',
+                      fontSize: 12,
+                      bold: true
+                    },
+                    format: '',
+                    gridlines: {
+                      count: Object.keys(uniqueMachines).length,
+                      color: '#e0e0e0'
+                    },
+                    minorGridlines: {
+                      count: 0
+                    }
+                  }
+                };
+
+                var chart = new google.visualization.Gantt(document.getElementById('chart_div'));
+                
+                // Chart hazır olduğunda çalışır
+                google.visualization.events.addListener(chart, 'ready', function() {
+                  window.parent.postMessage('chart_rendered', '*');
+                  
+                  console.log("Chart başarıyla oluşturuldu");
+                  
+                  // SVG'yi genel olarak iyileştir
+                  var svg = document.querySelector('svg');
+                  if (svg) {
+                    // Etiket sayısı bilgisi
+                    var allTextElements = svg.querySelectorAll('text');
+                    console.log('Değiştirilecek etiket sayısı:', allTextElements.length);
+                    
+                    // Y ekseni etiketleri artık doğru sıralamayla geliyor, manipülasyona gerek yok
+                  }
+                });
+                
+                // Chart'ı çiz
+                try {
+                  chart.draw(dataTable, options);
+                  console.log('Chart başarıyla oluşturuldu');
+                  
+                  // Pencere boyutu değişirse chart'ı yeniden çiz
+                  window.addEventListener('resize', function() {
+                    options.height = window.innerHeight;
+                    chart.draw(dataTable, options);
+                  });
+                  
+                  // Text elemanlarını kontrol et ve düzelt
+                  setTimeout(function() {
+                    try {
+                      // SVG text elementlerini bul
+                      var svg = document.querySelector('svg');
+                      if (svg) {
+                        var textElements = svg.querySelectorAll('text');
+                        console.log('Bulunan toplam metin elemanları:', textElements.length);
+
+                        // Sütun başlıklarını ve makine adları etiketlerini daha belirgin hale getir
+                        textElements.forEach(function(textEl) {
+                          // Y-eksenindeki metinlerin stilini düzelt (makine adları)
+                          if (textEl.getAttribute('text-anchor') === 'end') {
+                            textEl.setAttribute('font-weight', 'bold');
+                            textEl.setAttribute('fill', '#333');
+                          }
+                        });
+                      }
+                    } catch(e) {
+                      console.error('SVG text manipülasyonu hatası:', e);
+                    }
+                  }, 1000);
+                  
+                } catch (e) {
+                  console.error('Chart oluşturma hatası:', e);
+                }
+              } catch(e) {
+                console.error('Chart oluşturma hatası:', e);
+                document.getElementById('chart_div').innerHTML = '<div style="padding: 20px; color: red;">Gantt chart oluşturulurken bir hata oluştu: ' + e.message + '</div>';
               }
-
-              var options = {
-                height: 500,
-                width: '100%',
-                gantt: {
-                  trackHeight: 30,
-                  barHeight: 20,
-                  defaultStartDate: new Date(2024, 11, 18),
-                  shadowEnabled: false,
-                  labelMaxWidth: 150,
-                  barLabelStyle: {
-                    fontName: 'Segoe UI',
-                    fontSize: 11
-                  },
-                  innerGridHorizLine: {
-                    stroke: '#e0e0e0',
-                    strokeWidth: 1
-                  },
-                  innerGridTrack: { fill: '#f7f7f7' },
-                  innerGridDarkTrack: { fill: '#f2f2f2' }
-                },
-                backgroundColor: '#F5F5F5',
-                tooltip: { 
-                  isHtml: true,
-                  trigger: 'focus'
-                },
-                hAxis: {
-                  format: 'HH:mm',
-                  gridlines: {count: 24, color: '#e0e0e0'},
-                  minorGridlines: {count: 0}
-                }
-              };
-              
-              console.log('Chart options set without palette - using direct colors');
-
-              var chart = new google.visualization.Gantt(document.getElementById('chart_div'));
-              
-              // Chart hazır olduğunda çalışır
-              google.visualization.events.addListener(chart, 'ready', function() {
-                window.parent.postMessage('chart_rendered', '*');
-              });
-              
-              chart.draw(data, options);
             }
           </script>
         </head>
@@ -218,7 +463,7 @@ const ChartFrame = ({ chartData, highlightedOrderCode }) => {
     return () => {
       window.removeEventListener('message', messageListener);
     };
-  }, [chartData, highlightedOrderCode]);
+  }, [data, dateRange]);
 
   return (
     <iframe 
@@ -226,7 +471,7 @@ const ChartFrame = ({ chartData, highlightedOrderCode }) => {
       title="Gantt Chart"
       style={{ 
         width: '100%', 
-        height: '600px', 
+        height: '100%', 
         border: 'none',
         borderRadius: '4px',
         backgroundColor: '#F5F5F5'

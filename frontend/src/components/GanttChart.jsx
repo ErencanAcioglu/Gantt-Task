@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Plot from 'react-plotly.js';
 
-const GanttChart = () => {
+const GanttChart = ({ highlightedOrderCode }) => {
   const [tasks, setTasks] = useState([]);
 
   useEffect(() => {
@@ -12,32 +12,14 @@ const GanttChart = () => {
       });
   }, []);
 
-  // Makine isimlerini sırala ve unique hale getir
-  const machines = Array.from(new Set(tasks.map(task => task.machine_name)));
+  // Normalize fonksiyonu
+  const normalize = (str) => (str || '').trim().toUpperCase();
 
-  // Her makine için iş emirlerini topla
-  const data = machines.map(machine => {
-    const machineTasks = tasks.filter(task => task.machine_name === machine);
-    return {
-      x: machineTasks.map(task => [task.start_time, task.end_time]),
-      y: Array(machineTasks.length).fill(machine),
-      base: machineTasks.map(task => task.start_time),
-      orientation: 'h',
-      type: 'bar',
-      width: 0.5,
-      name: machine,
-      customdata: machineTasks.map(task => task.order_code),
-      hovertemplate:
-        'Makine: %{y}<br>Başlangıç: %{base}<br>Bitiş: %{x[1]}<br>İş Emri: %{customdata}<extra></extra>',
-      marker: {
-        color: machineTasks.map(task => '#1f77b4'),
-      },
-      offset: 0,
-    };
-  });
-
-  // Her makine için barlar y ekseninde üst üste gelmesin diye y değerlerini ayarla
-  // Plotly'de gerçek Gantt için shape veya waterfall gerekebilir, ama bar ile sade çözüm
+  // Bar renklerini ayarla: sadece aranan iş emri sarı, diğerleri mavi
+  const getBarColor = (orderCode) =>
+    highlightedOrderCode && normalize(orderCode) === normalize(highlightedOrderCode)
+      ? '#FFD600'
+      : '#1f77b4';
 
   return (
     <Plot
@@ -48,14 +30,25 @@ const GanttChart = () => {
               x: [task.start_time, task.end_time],
               y: [task.machine_name, task.machine_name],
               mode: 'lines',
-              line: { width: 20 },
+              line: { width: 20, color: getBarColor(task.order_code) },
               name: task.order_code,
+              customdata: [[
+                task.machine_name,
+                task.start_time,
+                task.end_time,
+                task.order_code,
+                task.customer_name || ''
+              ]],
               hovertemplate:
-                'Makine: %{y[0]}<br>Başlangıç: %{x[0]}<br>Bitiş: %{x[1]}<br>İş Emri: %{name}<extra></extra>',
+                'Machine: %{customdata[0]}<br>' +
+                'Start: %{customdata[1]}<br>' +
+                'End: %{customdata[2]}<br>' +
+                'Work Order: %{customdata[3]}<br>' +
+                'Customer: %{customdata[4]}<extra></extra>',
             }))
       }
       layout={{
-        title: 'Makine Bazlı Gantt Chart',
+        title: 'Üretim Gantt Chart Sistemi',
         xaxis: {
           title: 'Zaman',
           type: 'date',

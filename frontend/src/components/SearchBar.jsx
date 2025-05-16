@@ -28,57 +28,9 @@ const SearchBar = ({ onSearchResult }) => {
   };
 
   const handleSearchWithParam = async (searchParam) => {
-    if (!searchParam.trim()) {
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-      setSuccess(false);
-      
-      if (searchParam.toUpperCase().includes('MFG')) {
-        console.log('MFG-5 için özel işlem yapılıyor');
-        setSuccess(true);
-        onSearchResult('MFG-5');
-        setTimeout(() => setSuccess(false), 2000);
-        setPreviousSearches(prev => [...prev.filter(item => item !== 'MFG-5'), 'MFG-5']);
-        return;
-      }
-      
-      if (searchParam.toUpperCase().includes('RAM') && 
-         (searchParam.includes('1') || searchParam.toLowerCase() === 'ram')) {
-        console.log('RAM1 için özel işlem yapılıyor');
-        setSuccess(true);
-        onSearchResult('RAM1');
-        setTimeout(() => setSuccess(false), 2000);
-        setPreviousSearches(prev => [...prev.filter(item => item !== 'RAM1'), 'RAM1']);
-        return;
-      }
-      
-      const normalizedSearchTerm = normalizeOrderCode(searchParam);
-      const matchedCode = validOrderCodes.find(
-        code => normalizeOrderCode(code) === normalizedSearchTerm
-      );
-      
-      if (matchedCode) {
-        console.log(`${matchedCode} iş emri için vurgulama yapılıyor`);
-        setSuccess(true);
-        onSearchResult(matchedCode);
-        setTimeout(() => setSuccess(false), 2000);
-        setPreviousSearches(prev => [...prev.filter(item => item !== matchedCode), matchedCode]);
-        return;
-      }
-      
-      throw new Error(`İş emri bulunamadı: ${searchParam}`);
-      
-    } catch (err) {
-      console.error('İş emri arama hatası:', err);
-      setError(err.message);
-      onSearchResult(null);
-    } finally {
-      setLoading(false);
-    }
+    if (!searchParam.trim()) return;
+    onSearchResult(searchParam.trim());
+    setPreviousSearches(prev => [...prev.filter(item => item !== searchParam.trim()), searchParam.trim()]);
   };
 
   const handleSearch = async (e) => {

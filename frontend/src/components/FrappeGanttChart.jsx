@@ -1,6 +1,3 @@
-
-
-
 import React, { useEffect, useRef } from 'react';
 import Gantt from 'frappe-gantt';
 import '../assets/frappe-gantt.css';

@@ -12,10 +12,8 @@ const GanttChart = ({ highlightedOrderCode }) => {
       });
   }, []);
 
-  // Normalize fonksiyonu
   const normalize = (str) => (str || '').trim().toUpperCase();
 
-  // Bar renklerini ayarla: sadece aranan iş emri sarı, diğerleri mavi
   const getBarColor = (orderCode) =>
     highlightedOrderCode && normalize(orderCode) === normalize(highlightedOrderCode)
       ? '#FFD600'
@@ -27,24 +25,23 @@ const GanttChart = ({ highlightedOrderCode }) => {
         tasks.length === 0
           ? []
           : tasks.map(task => ({
-              x: [task.start_time, task.end_time],
-              y: [task.machine_name, task.machine_name],
+              x: [task.start_time || 'Bilinmiyor', task.end_time || 'Bilinmiyor'],
+              y: [task.machine_name || 'Bilinmiyor', task.machine_name || 'Bilinmiyor'],
               mode: 'lines',
               line: { width: 20, color: getBarColor(task.order_code) },
-              name: task.order_code,
               customdata: [[
-                task.machine_name,
-                task.start_time,
-                task.end_time,
-                task.order_code,
-                task.customer_name || ''
+                task.machine_name || 'Bilinmiyor',
+                task.start_time || 'Bilinmiyor',
+                task.end_time || 'Bilinmiyor',
+                task.order_code || 'Bilinmiyor',
+                task.customer_name || 'Bilinmiyor'
               ]],
               hovertemplate:
-                'Machine: %{customdata[0]}<br>' +
-                'Start: %{customdata[1]}<br>' +
-                'End: %{customdata[2]}<br>' +
-                'Work Order: %{customdata[3]}<br>' +
-                'Customer: %{customdata[4]}<extra></extra>',
+                'Makine: %{customdata[0]}<br>' +
+                'Başlangıç: %{customdata[1]}<br>' +
+                'Bitiş: %{customdata[2]}<br>' +
+                'İş Emri: %{customdata[3]}<br>' +
+                'Müşteri: %{customdata[4]}<extra></extra>',
             }))
       }
       layout={{

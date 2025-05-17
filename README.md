@@ -50,5 +50,4 @@ npm run dev
 ## Ek Bilgiler
 
 - Backend FastAPI + Supabase, frontend React + Plotly ile geliştirilmiştir.
-- Tüm kodlar yorumsuz ve temizdir.
 - Canlı demo için: [https://gantt-task-front.vercel.app/](https://gantt-task-front.vercel.app/) 

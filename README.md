@@ -1,43 +1,54 @@
-# Gantt Chart Task Scheduler
+## Canlı Demo
 
-Üretim planlama için Gantt Chart uygulaması - Supabase entegrasyonu ile.
+[Canlı Gantt Chart Uygulaması](https://gantt-task-front.vercel.app/)
 
-## Deployment
+---
 
-### Frontend Deployment (Vercel)
+## Projeyi Başlatma
 
-1. Vercel CLI'ı yükleyin: `npm i -g vercel`
-2. Frontend klasörüne gidin: `cd frontend`
-3. Vercel'e deploy edin: `vercel` (ilk kez kullanıyorsanız Vercel hesabınızla giriş yapmanız istenecek)
-4. Soruları takip edin, varsayılan değerleri kabul edebilirsiniz
-5. Deploy sonrası size bir URL verilecek
+### 1. Gerekli Bağımlılıkları Kur
 
-### Backend Deployment (Vercel)
-
-1. Backend klasörüne gidin: `cd backend`
-2. Vercel'e deploy edin: `vercel` 
-3. Soruları takip edin, varsayılan değerleri kabul edebilirsiniz
-4. Deploy sonrası size bir URL verilecek
-5. Bu URL'yi frontend/src/config.js içindeki `BACKEND_API_URL` değişkenine atayın
-6. Frontend'i tekrar deploy edin
-
-## Geliştirme
-
-### Frontend Geliştirme
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-### Backend Geliştirme
+Hem backend hem frontend için bağımlılıkları yükle:
 
 ```bash
 cd backend
-uvicorn main:app --reload --host 0.0.0.0
+pip install -r requirements.txt
+
+cd ../frontend
+npm install
 ```
 
-## Supabase Entegrasyonu
+### 2. Backend'i Başlat
 
-Uygulama, Supabase'deki machinetasks ve workorders tablolarını kullanır. Veriler Supabase'den çekilir ve grafik görünümünde gösterilir. 
+Backend dizinine geçip FastAPI sunucusunu başlat:
+
+```bash
+cd backend
+uvicorn main:app --reload --host 0.0.0.0 --port 5001
+```
+
+
+### 3. Frontend'i Başlat
+
+Frontend dizinine geçip Vite ile React uygulamasını başlat:
+
+```bash
+cd frontend
+npm run dev
+```
+
+> Uygulama genellikle [http://localhost:5173](http://localhost:5173) adresinde açılır.
+
+### 4. Kullanım
+
+- Sol taraftaki arama kutusuna iş emri kodu (örn. `MFG-5`) girip "Ara"ya basarak ilgili iş emrini sarı renkte vurgulayabilirsin.
+- Tüm makineler ve iş emirleri eksiksiz olarak Gantt chart üzerinde gösterilir.
+- Barların üzerine gelince detaylı tooltip görünür.
+
+---
+
+## Ek Bilgiler
+
+- Backend FastAPI + Supabase, frontend React + Plotly ile geliştirilmiştir.
+- Tüm kodlar yorumsuz ve temizdir.
+- Canlı demo için: [https://gantt-task-front.vercel.app/](https://gantt-task-front.vercel.app/) 
